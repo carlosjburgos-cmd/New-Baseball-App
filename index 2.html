@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#06111d">
+<title>Walk-Up Baseball</title>
+<style>
+:root{--bg:#06111d;--panel:#10243a;--panel2:#17334f;--text:#fff;--muted:#9db2c7;--accent:#f7c948;--danger:#ff5d57}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif}
+body{min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);overscroll-behavior:none}
+.app{max-width:720px;margin:auto;padding:14px 13px 28px}
+header{position:sticky;top:0;z-index:10;background:rgba(6,17,29,.96);backdrop-filter:blur(12px);padding:8px 0 10px}
+.headrow{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-size:25px;line-height:1;margin:0;font-weight:950;letter-spacing:-.02em}
+.stop{border:0;border-radius:14px;background:var(--danger);color:#fff;font-size:15px;font-weight:950;padding:12px 15px;min-width:92px}
+.status{margin-top:10px;background:#0d1f31;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:9px 12px}
+.status small{display:block;color:var(--muted);font-size:10px;font-weight:900;letter-spacing:.1em}
+#now{font-size:15px;font-weight:900;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tip{color:var(--muted);font-size:12px;text-align:center;margin:10px 2px 12px}
+#lineup{display:flex;flex-direction:column;gap:10px}
+.player{display:flex;align-items:stretch;background:var(--panel);border:1px solid rgba(255,255,255,.1);border-radius:18px;overflow:hidden;box-shadow:0 5px 16px rgba(0,0,0,.18);touch-action:pan-y;transition:transform .12s,opacity .12s}
+.player.dragging{opacity:.78;transform:scale(1.015);z-index:50;box-shadow:0 14px 30px rgba(0,0,0,.42)}
+.drag{width:58px;min-width:58px;background:#0b1b2b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab}
+.order{font-size:18px;font-weight:950;color:var(--accent)}
+.grip{font-size:24px;color:#8098ad;line-height:1}
+.playerbody{flex:1;padding:13px 12px}
+.pname{font-size:22px;font-weight:950;line-height:1;margin-bottom:9px;letter-spacing:-.015em}
+.songs{display:flex;gap:8px;flex-wrap:wrap}
+.songbtn{border:1px solid rgba(255,255,255,.12);background:var(--panel2);color:#fff;border-radius:12px;padding:10px 12px;font-size:14px;font-weight:850;display:flex;align-items:center;gap:7px;min-height:42px}
+.songbtn:active{transform:scale(.98)}
+.songbtn.active{background:var(--accent);color:#0b1622;border-color:var(--accent)}
+.playicon{font-size:12px}
+.editnote{margin-top:14px;color:#718aa0;text-align:center;font-size:11px;line-height:1.4}
+.nojs{background:#401b1b;padding:12px;border-radius:12px;margin:10px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="headrow">
+    <h1>⚾ Walk-Up Lineup</h1>
+    <button class="stop" id="stopBtn" type="button">■ STOP</button>
+  </div>
+  <div class="status"><small>NOW PLAYING</small><div id="now">Nothing playing</div></div>
+</header>
+
+<noscript><div class="nojs">This interactive version needs JavaScript enabled in Safari.</div></noscript>
+
+<div class="tip">Tap a song to switch instantly without overlap. STOP fades out smoothly. Drag ☰ to change the batting order.</div>
+
+<div id="lineup">
+
+      <div class="player" data-player="Dylan">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Dylan</div>
+          <div class="songs"><button class="songbtn" id="b0" type="button" data-track="0"><span class="playicon">▶</span><span>Metroid</span></button><button class="songbtn" id="b1" type="button" data-track="1"><span class="playicon">▶</span><span>Terminator</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Becket">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Becket</div>
+          <div class="songs"><button class="songbtn" id="b2" type="button" data-track="2"><span class="playicon">▶</span><span>Enter Sandman</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Omar">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Omar</div>
+          <div class="songs"><button class="songbtn" id="b3" type="button" data-track="3"><span class="playicon">▶</span><span>Headlights</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Yassir">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Yassir</div>
+          <div class="songs"><button class="songbtn" id="b4" type="button" data-track="4"><span class="playicon">▶</span><span>All I Do Is Win</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Atlas">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Atlas</div>
+          <div class="songs"><button class="songbtn" id="b5" type="button" data-track="5"><span class="playicon">▶</span><span>Insomnia</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Aiden">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Aiden</div>
+          <div class="songs"><button class="songbtn" id="b6" type="button" data-track="6"><span class="playicon">▶</span><span>Party Up</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Mark">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Mark</div>
+          <div class="songs"><button class="songbtn" id="b7" type="button" data-track="7"><span class="playicon">▶</span><span>Uptown Funk</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Frankie">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Frankie</div>
+          <div class="songs"><button class="songbtn" id="b8" type="button" data-track="8"><span class="playicon">▶</span><span>Semi Automatic</span></button></div>
+        </div>
+      </div>
+    
+      <div class="player" data-player="Jay">
+        <div class="drag" aria-label="Drag to reorder"><span class="order"></span><span class="grip">☰</span></div>
+        <div class="playerbody">
+          <div class="pname">Jay</div>
+          <div class="songs"><button class="songbtn" id="b9" type="button" data-track="9"><span class="playicon">▶</span><span>Thunderstruck</span></button></div>
+        </div>
+      </div>
+    
+</div>
+
+<div class="editnote">Your batting order is saved automatically in this browser.</div>
+<audio id="a0" preload="none" playsinline src="a0.aac"></audio><audio id="a1" preload="none" playsinline src="a1.aac"></audio><audio id="a2" preload="none" playsinline src="a2.aac"></audio><audio id="a3" preload="none" playsinline src="a3.aac"></audio><audio id="a4" preload="none" playsinline src="a4.aac"></audio><audio id="a5" preload="none" playsinline src="a5.aac"></audio><audio id="a6" preload="none" playsinline src="a6.aac"></audio><audio id="a7" preload="none" playsinline src="a7.aac"></audio><audio id="a8" preload="none" playsinline src="a8.aac"></audio><audio id="a9" preload="none" playsinline src="a9.aac"></audio>
+</div>
+
+<script>
+(() => {
+  const TRACKS = {"0": {"player": "Dylan", "title": "Metroid", "audioId": "a0", "buttonId": "b0"}, "1": {"player": "Dylan", "title": "Terminator", "audioId": "a1", "buttonId": "b1"}, "2": {"player": "Becket", "title": "Enter Sandman", "audioId": "a2", "buttonId": "b2"}, "3": {"player": "Omar", "title": "Headlights", "audioId": "a3", "buttonId": "b3"}, "4": {"player": "Yassir", "title": "All I Do Is Win", "audioId": "a4", "buttonId": "b4"}, "5": {"player": "Atlas", "title": "Insomnia", "audioId": "a5", "buttonId": "b5"}, "6": {"player": "Aiden", "title": "Party Up", "audioId": "a6", "buttonId": "b6"}, "7": {"player": "Mark", "title": "Uptown Funk", "audioId": "a7", "buttonId": "b7"}, "8": {"player": "Frankie", "title": "Semi Automatic", "audioId": "a8", "buttonId": "b8"}, "9": {"player": "Jay", "title": "Thunderstruck", "audioId": "a9", "buttonId": "b9"}};
+  const lineup = document.getElementById('lineup');
+  const now = document.getElementById('now');
+  const stopBtn = document.getElementById('stopBtn');
+  let activeAudio = null;
+  let activeButton = null;
+  let fadeTimer = null;
+  let playVersion = 0;
+  const FADE_OUT_MS = 550;
+  const FADE_IN_MS = 220;
+  const VOLUME_STEP_MS = 25;
+
+  function cancelFade() {
+    if (fadeTimer !== null) {
+      clearInterval(fadeTimer);
+      fadeTimer = null;
+    }
+  }
+
+  function resetAudio(audio) {
+    if (!audio) return;
+    audio.pause();
+    try { audio.currentTime = 0; } catch (e) {}
+    audio.volume = 1;
+  }
+
+  function clearPlayingUI() {
+    document.querySelectorAll('.songbtn').forEach(b => b.classList.remove('active'));
+    activeAudio = null;
+    activeButton = null;
+    now.textContent = 'Nothing playing';
+  }
+
+  function stopAll(fade = true) {
+    ++playVersion; // Invalidates any unfinished play() promises.
+    cancelFade();
+    const playing = activeAudio;
+    // Ensure any other audio is completely stopped and rewound.
+    document.querySelectorAll('audio').forEach(a => {
+      if (a !== playing) resetAudio(a);
+    });
+    clearPlayingUI();
+
+    if (!playing) return;
+    if (!fade || playing.paused) {
+      resetAudio(playing);
+      return;
+    }
+
+    const initialVolume = playing.volume;
+    const started = performance.now();
+    now.textContent = 'Fading out…';
+    fadeTimer = setInterval(() => {
+      const fraction = Math.min(1, (performance.now() - started) / FADE_OUT_MS);
+      playing.volume = Math.max(0, initialVolume * (1 - fraction));
+      if (fraction >= 1 || playing.paused) {
+        cancelFade();
+        resetAudio(playing);
+        now.textContent = 'Nothing playing';
+      }
+    }, VOLUME_STEP_MS);
+  }
+
+  function playTrack(index) {
+    const t = TRACKS[index];
+    if (!t) return;
+    const audio = document.getElementById(t.audioId);
+    const button = document.getElementById(t.buttonId);
+    if (!audio || !button) return;
+
+    ++playVersion;
+    const version = playVersion;
+    cancelFade();
+
+    // On song changes, stop and rewind BEFORE starting the next one.
+    // This guarantees no audio overlap on the field.
+    document.querySelectorAll('audio').forEach(resetAudio);
+    document.querySelectorAll('.songbtn').forEach(b => b.classList.remove('active'));
+    audio.volume = 0;
+    button.classList.add('active');
+    activeAudio = audio;
+    activeButton = button;
+    now.textContent = t.player + ' — ' + t.title;
+
+    // Call play() immediately within the user tap (important on iPhones).
+    const attempt = audio.play();
+    if (attempt && typeof attempt.then === 'function') {
+      attempt.then(() => {
+        if (version !== playVersion || activeAudio !== audio) return;
+        const started = performance.now();
+        cancelFade();
+        fadeTimer = setInterval(() => {
+          if (version !== playVersion || activeAudio !== audio) {
+            cancelFade();
+            return;
+          }
+          const fraction = Math.min(1, (performance.now() - started) / FADE_IN_MS);
+          audio.volume = fraction;
+          if (fraction >= 1) cancelFade();
+        }, VOLUME_STEP_MS);
+      }).catch(() => {
+        if (version === playVersion) {
+          resetAudio(audio);
+          clearPlayingUI();
+          now.textContent = 'Could not play — tap again';
+        }
+      });
+    } else {
+      audio.volume = 1;
+    }
+  }
+
+  document.querySelectorAll('.songbtn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      playTrack(btn.dataset.track);
+    });
+  });
+  stopBtn.addEventListener('click', () => stopAll(true));
+
+  document.querySelectorAll('audio').forEach(a => {
+    a.addEventListener('ended', () => {
+      if (a === activeAudio) stopAll(false);
+    });
+  });
+
+  function updateNumbers() {
+    [...lineup.children].forEach((card,i) => {
+      card.querySelector('.order').textContent = i + 1;
+    });
+  }
+
+  function saveOrder() {
+    const order = [...lineup.children].map(x => x.dataset.player);
+    try { localStorage.setItem('walkup-lineup-order', JSON.stringify(order)); } catch(e) {}
+  }
+
+  function restoreOrder() {
+    try {
+      const saved = JSON.parse(localStorage.getItem('walkup-lineup-order') || 'null');
+      if(Array.isArray(saved)) {
+        saved.forEach(name => {
+          const el = [...lineup.children].find(x => x.dataset.player === name);
+          if(el) lineup.appendChild(el);
+        });
+      }
+    } catch(e) {}
+    updateNumbers();
+  }
+
+  // Touch/mouse drag reordering using Pointer Events.
+  let dragged = null;
+  let pointerId = null;
+
+  lineup.querySelectorAll('.drag').forEach(handle => {
+    handle.addEventListener('pointerdown', e => {
+      dragged = handle.closest('.player');
+      pointerId = e.pointerId;
+      handle.setPointerCapture(pointerId);
+      dragged.classList.add('dragging');
+      if(navigator.vibrate) navigator.vibrate(15);
+      e.preventDefault();
+    });
+
+    handle.addEventListener('pointermove', e => {
+      if(!dragged || e.pointerId !== pointerId) return;
+      const y = e.clientY;
+      const cards = [...lineup.querySelectorAll('.player:not(.dragging)')];
+      let target = null;
+      for(const card of cards) {
+        const r = card.getBoundingClientRect();
+        if(y < r.top + r.height/2) { target = card; break; }
+      }
+      if(target) lineup.insertBefore(dragged, target);
+      else lineup.appendChild(dragged);
+      updateNumbers();
+
+      // Auto-scroll near screen edges.
+      const edge = 90;
+      if(y < edge) window.scrollBy(0, -10);
+      else if(y > window.innerHeight - edge) window.scrollBy(0, 10);
+      e.preventDefault();
+    });
+
+    const finish = e => {
+      if(!dragged || e.pointerId !== pointerId) return;
+      dragged.classList.remove('dragging');
+      dragged = null;
+      pointerId = null;
+      updateNumbers();
+      saveOrder();
+      e.preventDefault();
+    };
+    handle.addEventListener('pointerup', finish);
+    handle.addEventListener('pointercancel', finish);
+  });
+
+  restoreOrder();
+})();
+</script>
+</body>
+</html>
